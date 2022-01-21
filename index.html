@@ -1,0 +1,179 @@
+<head>
+  <link
+    rel="stylesheet"
+    href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
+    crossorigin="anonymous"
+  />
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+  <script
+  src="https://code.jquery.com/jquery-3.5.1.js"
+  integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc="
+  crossorigin="anonymous"
+></script>
+  <script
+    src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+    integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+    crossorigin="anonymous"
+  ></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+    integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+    crossorigin="anonymous"
+  ></script>
+  <script
+    src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+    integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
+    crossorigin="anonymous"
+  ></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.20.0/axios.min.js"></script>
+</head>
+<div class="container">
+
+
+  <h1>Club Deportivo Discipline Spa</h1>
+  <div action="http://localhost:3000/agregar" class="border rounded p-4">
+    <div class="form-group row">
+      <label class="col-sm-2 col-form-label">Nombre</label>
+
+      <div class="col-sm-10">
+        <input id="nombre" type="text" class="form-control" name="nombre" />
+      </div>
+    </div>
+    <div class="form-group row">
+      <label class="col-sm-2 col-form-label">Precio</label>
+
+      <div class="col-sm-10">
+        <input id="precio" type="number" class="form-control" precio="precio" />
+      </div>
+    </div>
+
+    <button class="btn btn-info" onclick="agregar()">Agregar</button>
+  </div>
+</div>
+
+<h5 class="text-center my-4">Tabla de deportes registrados</h5>
+<table class="table w-25 m-auto border">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Nombre</th>
+      <th scope="col">Precio</th>
+      <th scope="col"></th>
+    </tr>
+  </thead>
+  <tbody id="cuerpo"></tbody>
+</table>
+
+<script>
+  $(document).ready(function () {
+    getData()
+  })
+
+  function getData() {
+    $('#cuerpo').html('')
+    axios.get('http://localhost:3000/deportes').then((data) => {
+      let deportes = data.data.deportes
+      deportes.forEach((d, i) => {
+        $('#cuerpo').append(`
+        <tr>
+          <th scope="row">${i + 1}</th>
+          <td>${d.nombre}</td>
+          <td>$${Number(d.precio).toLocaleString("es")}</td>
+          <td>
+            <button class="btn btn-warning" onclick='preEdit("${d.nombre}","${
+          d.precio
+        }")' data-toggle="modal" data-target="#exampleModal">Editar</button>
+            <button class="btn btn-danger" onclick='eliminar("${d.nombre}")'>Eliminar</button>
+          </td>
+        </tr>
+        `)
+      })
+    })
+  }
+
+  function preEdit(nombre, precio) {
+    $('#nombreModal').val(nombre)
+    $('#precioModal').val(precio)
+  }
+
+// Nueva función que limpia los campos del input
+  function clearData() {
+    document.getElementById("nombre").value = ""
+    document.getElementById("precio").value = ""
+  }
+
+// Se agregó una validación para evitar ingresar disciplinas repetidas
+  function agregar() {
+    let nombre = $('#nombre').val()
+    let precio = $('#precio').val()
+    axios.get('http://localhost:3000/deportes').then((data) => {
+      let deportes = data.data.deportes
+      if (deportes.find(p => p.nombre == nombre)) {
+        alert(`La disciplina ${nombre} ya existe, intenta con una nueva disciplina`)
+        getData()
+        clearData()
+
+      } else {
+        axios.get(`http://localhost:3000/agregar?nombre=${nombre}&precio=${precio}`).then((data) => {
+        alert(`Se ha agregado la disciplina ${nombre} con un valor de $${Number(precio).toLocaleString("es")}`)
+        getData()
+        clearData()
+      })
+            $('#exampleModal').modal('hide')
+
+      }
+    })
+  }
+
+  function edit() {
+    let nombre = $('#nombreModal').val()
+    let precio = $('#precioModal').val()
+    axios.get(`http://localhost:3000/editar?nombre=${nombre}&precio=${precio}`).then((data) => {
+      alert(`Se ha editado la disciplina ${nombre} cuyo valor ahora es de $${Number(precio).toLocaleString("es")}`)
+      getData()
+    })
+    $('#exampleModal').modal('hide')
+  }
+
+  function eliminar(nombre) {
+    axios.get(`http://localhost:3000/eliminar?nombre=${nombre}`).then((data) => {
+      alert(`Se ha eliminado la disciplina ${nombre}`)
+      getData()
+    })
+    $('#exampleModal').modal('hide')
+  }
+</script>
+
+<div
+  class="modal fade"
+  id="exampleModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="exampleModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div  class="rounded p-4"></form>
+        <div class="form-group row">
+          <label class="col-sm-2 col-form-label">Nombre</label>
+
+          <div class="col-sm-10">
+            <input id="nombreModal" disabled type="text" class="form-control" name="nombre" />
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-2 col-form-label">Precio</label>
+
+          <div class="col-sm-10">
+            <input id="precioModal" type="text" class="form-control" precio="precio" />
+          </div>
+        </div>
+
+        <button class="btn btn-warning" onclick="edit()">Editar</button>
+      </div>
+    </div>
+  </div>
+</div>
